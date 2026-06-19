@@ -4,6 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Phone, CheckCircle, Loader2, AlertCircle, Bot } from "lucide-react";
+import axios from "axios";
+
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const schema = z.object({
   name: z
@@ -101,26 +105,61 @@ export default function RegistrationForm() {
     formState: { errors },
   } = useForm({ resolver: zodResolver(schema) });
 
-  const onSubmit = async (data) => {
-    setStatus("loading");
-    try {
-      const res = await fetch("http://localhost:5000/api/enquiry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Submission failed");
-      setStatus("success");
-      reset();
-    } catch (err) {
-      // In demo (no backend), show success anyway after 1.5s for portfolio showcase
-      await new Promise((r) => setTimeout(r, 1500));
-      setStatus("success");
-      reset();
-    }
-  };
+  {status === "error" && (
+  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3 text-red-300 text-sm">
+    {errorMessage}
+  </div>
+)}
 
+  // const onSubmit = async (data) => {
+  //   setStatus("loading");
+  //   try {
+  //     const res = await axios.post("http://localhost:5000/api/enquiry", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(data),
+  //     });
+  //     const json = await res.json();
+  //     if (!res.ok) throw new Error(json.message || "Submission failed");
+  //     setStatus("success");
+  //     reset();
+  //   } catch (err) {
+  //     // In demo (no backend), show success anyway after 1.5s for portfolio showcase
+  //     await new Promise((r) => setTimeout(r, 1500));
+  //     setStatus("success");
+  //     reset();
+  //   }
+  // };
+  const onSubmit = async (data) => {
+  setStatus("loading");
+  setErrorMessage("");
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/enquiry`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Success:", response.data);
+
+    setStatus("success");
+    reset();
+  } catch (err) {
+    console.error("Error:", err.response?.data || err);
+
+    setErrorMessage(
+      err.response?.data?.message ||
+      "Registration failed. Please try again."
+    );
+
+    setStatus("error");
+  }
+};
   return (
     <section id="register" className="py-20 bg-brand-softblue">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
